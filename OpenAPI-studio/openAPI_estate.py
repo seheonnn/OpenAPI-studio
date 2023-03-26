@@ -2,6 +2,7 @@
 
 # https://www.data.go.kr/tcs/dss/selectApiDataDetailView.do?publicDataPk=15059249
 import numpy as np
+import openpyxl
 import requests
 import xmltodict
 import json
@@ -15,7 +16,7 @@ rc('font',family ='AppleGothic')
 # 지역이름 -> 법정동코드 변환 코드
 
 data = {
-    # '연도' : [],
+    '연도' : [],
     '오피스텔명' : [],
     '계약기간' : [],
     '보증금' : [],
@@ -63,21 +64,24 @@ def printOfficeTransaction(dongCode, apartName, sDate):
         d = dict_data['response']['body']['items']['item']
         m_deposit = []  # 월별 보증금
         m_fee = []  # 월별 월세
+        print("len(d):",len(d))
         for i in range(len(d)):
             for k in d[i].keys():
                 if d[i].get('단지') == apartName:
-                    data.get('오피스텔명').append(apartName)
                     deposit.append(int(d[i].get('보증금').replace(',', '')))
                     fee.append(int(d[i].get('월세')))
-
-                    floor.append(d[i].get('층'))
-                    area.append(d[i].get('전용면적'))
-                    data.get('계약기간').append(d[i].get('계약기간'))
-
                     m_deposit.append(int(d[i].get('보증금').replace(',', '')))
                     m_fee.append(int(d[i].get('월세')))
+
                     print(k, d[i].get(k))
                 # print(k, d[i].get(k))
+            data.get('오피스텔명').append(apartName)
+            data.get('연도').append(DEAL_YMD)
+            data.get('계약기간').append(d[i].get('계약기간'))
+            data.get('보증금').append(d[i].get('보증금'))
+            data.get('월세').append(d[i].get('월세'))
+            data.get('층').append(d[i].get('층'))
+            data.get('전용면적').append(d[i].get('전용면적'))
             print("\n")
 
         m_deposit = np.array(m_deposit)
@@ -85,13 +89,8 @@ def printOfficeTransaction(dongCode, apartName, sDate):
         avgDeposit.append(np.mean(m_deposit))
         avgFee.append(np.mean(m_fee))
 
-    # data.get('연도').extend(DATE)
-    data.get('보증금').extend(deposit)
-    data.get('월세').extend(fee)
-    data.get('층').extend(floor)
-    data.get('전용면적').extend(area)
-
-    df = pd.DataFrame(data, index=data['계약기간'])  # index추가할 수 있음
+    # 엑셀 추출
+    df = pd.DataFrame(data, index=data['연도'])  # index추가할 수 있음
     df.to_excel('studio_deal_info.xlsx', index=False)
 
     deposit = np.array(deposit)
@@ -106,7 +105,7 @@ def printOfficeTransaction(dongCode, apartName, sDate):
     plt.axis([0, 5000, 0, 100])
     plt.xlabel('보증금')
     plt.ylabel('월세')
-    plt.title(apartName + ' 보증금 별 월세')
+    plt.title(apartName + ' 보증금별 월세')
     plt.show()
 
     # 날짜별 보증금
@@ -129,6 +128,7 @@ def printOfficeTransaction(dongCode, apartName, sDate):
 
     # def stringNumberToInt(stringNumber):
     #     return int(stringNumber.replace(',', ''))
+
 
 dongCode = searchLawdCd('충청남도 천안시 서북구 불당동')
 print(dongCode)
