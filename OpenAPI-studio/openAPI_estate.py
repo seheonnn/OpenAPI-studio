@@ -6,7 +6,7 @@ import requests
 import xmltodict
 import json
 import matplotlib.pyplot as plt
-import pandas
+import pandas as pd
 
 # 그래프 한글 사용
 from matplotlib import font_manager, rc
@@ -14,9 +14,18 @@ rc('font',family ='AppleGothic')
 
 # 지역이름 -> 법정동코드 변환 코드
 
+data = {
+    # '연도' : [],
+    '오피스텔명' : [],
+    '계약기간' : [],
+    '보증금' : [],
+    '월세' : [],
+    '층' : [],
+    '전용면적' : []
+}
 
 def searchLawdCd(locate_nm):
-    raw = pandas.read_csv('./dongCode.txt', sep="\t", encoding="CP949")
+    raw = pd.read_csv('./dongCode.txt', sep="\t", encoding="CP949")
     realdata = raw[raw['폐지여부'] == '존재']
     strcode = realdata['법정동코드'].astype(str).apply(lambda x: x[:5])
     lawd_cd = strcode[realdata['법정동명'] == locate_nm].values[0]
@@ -30,11 +39,13 @@ def printOfficeTransaction(dongCode, apartName, sDate):
     DEAL_YMD = sDate # 해당 월부터 1년
 
     DATE = []
-    avgDeposit = []
-    avgFee = []
+    avgDeposit = [] # 평균 보증ㄱ므
+    avgFee = [] # 평균 월세
 
     deposit = [] # 보증금
     fee = [] # 월세
+    floor = [] # 층
+    area = []
 
     # apartName = '불당아리스타팰리스' # 오피스텔 이름
     for i in range(DEAL_YMD, DEAL_YMD-12, -1):
@@ -55,8 +66,13 @@ def printOfficeTransaction(dongCode, apartName, sDate):
         for i in range(len(d)):
             for k in d[i].keys():
                 if d[i].get('단지') == apartName:
+                    data.get('오피스텔명').append(apartName)
                     deposit.append(int(d[i].get('보증금').replace(',', '')))
                     fee.append(int(d[i].get('월세')))
+
+                    floor.append(d[i].get('층'))
+                    area.append(d[i].get('전용면적'))
+                    data.get('계약기간').append(d[i].get('계약기간'))
 
                     m_deposit.append(int(d[i].get('보증금').replace(',', '')))
                     m_fee.append(int(d[i].get('월세')))
@@ -69,6 +85,14 @@ def printOfficeTransaction(dongCode, apartName, sDate):
         avgDeposit.append(np.mean(m_deposit))
         avgFee.append(np.mean(m_fee))
 
+    # data.get('연도').extend(DATE)
+    data.get('보증금').extend(deposit)
+    data.get('월세').extend(fee)
+    data.get('층').extend(floor)
+    data.get('전용면적').extend(area)
+
+    df = pd.DataFrame(data, index=data['계약기간'])  # index추가할 수 있음
+    df.to_excel('studio_deal_info.xlsx', index=False)
 
     deposit = np.array(deposit)
     fee = np.array(fee)
