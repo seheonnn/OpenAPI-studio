@@ -45,8 +45,6 @@ def printOfficeTransaction(dongCode, apartName, sDate):
 
     deposit = [] # 보증금
     fee = [] # 월세
-    floor = [] # 층
-    area = []
 
     # apartName = '불당아리스타팰리스' # 오피스텔 이름
     for i in range(DEAL_YMD, DEAL_YMD-12, -1):
@@ -107,12 +105,14 @@ def printOfficeTransaction(dongCode, apartName, sDate):
     # # 거래량
     # g = np.arange(0, len(fee))
 
+    # 보증금별 월세
     plt.figure()
     plt.scatter(deposit, fee, color='black')
     plt.axis([0, 5000, 0, 100])
     plt.xlabel('보증금')
     plt.ylabel('월세')
     plt.title(apartName + ' 보증금별 월세')
+    plt.savefig('보증금별 월세.png', dpi=300, bbox_inches='tight')
     plt.show()
 
     # 날짜별 보증금
@@ -121,6 +121,7 @@ def printOfficeTransaction(dongCode, apartName, sDate):
     plt.xticks(rotation=90)
     plt.xlabel('날짜')
     plt.ylabel('보증금')
+    plt.savefig('날짜별 보증금.png', dpi=300, bbox_inches='tight')
     plt.show()
 
     # 날짜별 월세
@@ -129,14 +130,37 @@ def printOfficeTransaction(dongCode, apartName, sDate):
     plt.xticks(rotation=90)
     plt.xlabel('날짜')
     plt.ylabel('월세')
+    plt.savefig('날짜별 월세.png', dpi=300, bbox_inches='tight')
     plt.show()
-
-    # print(response.text)
-
-    # def stringNumberToInt(stringNumber):
-    #     return int(stringNumber.replace(',', ''))
 
 
 dongCode = searchLawdCd('충청남도 천안시 서북구 불당동')
 print(dongCode)
 printOfficeTransaction(dongCode, "불당아리스타팰리스", 202212)
+
+
+
+workbook = openpyxl.load_workbook('studio_deal_info.xlsx')
+sheet = workbook.active
+
+
+# 그래프 이미지를 엑셀 파일에 추가
+# 그림 1
+img = openpyxl.drawing.image.Image('보증금별 월세.png')
+img.height = 400
+img.width = 400
+sheet.add_image(img, 'I1')
+# 그림 2
+img = openpyxl.drawing.image.Image('날짜별 보증금.png')
+img.height = 400
+img.width = 400
+sheet.add_image(img, 'I20')
+# 그림 3
+img = openpyxl.drawing.image.Image('날짜별 월세.png')
+img.height = 400
+img.width = 400
+sheet.add_image(img, 'P20')
+
+
+# 엑셀 파일 저장
+workbook.save('studio_deal_info.xlsx')
