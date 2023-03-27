@@ -95,6 +95,13 @@ def printOfficeTransaction(dongCode, apartName, sDate):
 
     deposit = np.array(deposit)
     fee = np.array(fee)
+
+    workbook = openpyxl.load_workbook('studio_deal_info.xlsx')
+    sheet = workbook.active
+    sheet['I1'] = "평균 보증금: "+ str(np.mean(deposit))
+    sheet['I2'] = "평균 월세: "+ str(np.mean(fee))
+    workbook.save('studio_deal_info.xlsx')
+
     print(apartName, "평균 보증금: ", np.mean(deposit), "평균 월세: ", np.mean(fee))
 
     # # 거래량
